@@ -10,18 +10,18 @@ module.exports = (region = 'eu-central-1', config) => {
 
   var dynamoDB, configObj;
 
-  // This will force using STS as fallback credentials provider
-  if (!config || (config && !Object.keys(config).length) || (config && config === "")) AWS.config.credentials = new AWS.ECSCredentials();
-
   if (typeof config === 'string') {
-    var configObj = Object.assign(JSON.parse(require('fs').readFileSync(config, 'utf8')), { region: region } );
+    configObj = Object.assign(JSON.parse(require('fs').readFileSync(config, 'utf8')), { region: region } );
   } else if (typeof config === 'object') {
-    var configObj = Object.assign(config, { region: region})
+    configObj = Object.assign(config, { region: region })
+  } else {
+    // This will force using STS as fallback credentials provider
+    if (!configObj) configObj = new AWS.ECSCredentials();
+    if (!configObj) configObj = new AWS.SharedIniFileCredentials();
+    if (!configObj) configObj = new AWS.EnvironmentCredentials('AWS');
   }
 
   dynamoDB = new AWS.DynamoDB( configObj );
-
-  console.log(JSON.stringify(dynamoDB));
 
   if (!dynamoDB.config.credentials) {
     throw new Error('Can not load AWS credentials');

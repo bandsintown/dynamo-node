@@ -9,7 +9,7 @@ const getPromise = func => (method, params) => new Promise((resolve, reject) => 
 module.exports = (region = 'eu-central-1', config) => {
 
   // This will force using STS as fallback credentials provider
-  if (!config || (config && config === !Object.keys(config).length) || (config && config === "")) AWS.config.credentials = new AWS.ECSCredentials();
+  if (!config || (config && !Object.keys(config).length) || (config && config === "")) AWS.config.credentials = new AWS.ECSCredentials();
 
   AWS.config.update({ region });
   if (typeof config === 'string') {

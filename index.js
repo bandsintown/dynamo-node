@@ -8,17 +8,21 @@ const getPromise = func => (method, params) => new Promise((resolve, reject) => 
 // Exports DynamoDB function that returns an object of methods
 module.exports = (region = 'eu-central-1', config) => {
 
-  // This will force using STS as fallback credentials provider
-  if (!config || (config && !Object.keys(config).length) || (config && config === "")) AWS.config.credentials = new AWS.ECSCredentials();
+  var dynamoDB, configObj;
 
-  AWS.config.update({ region });
   if (typeof config === 'string') {
-    AWS.config.loadFromPath(config);
+    configObj = Object.assign(JSON.parse(require('fs').readFileSync(config, 'utf8')), { region: region } );
   } else if (typeof config === 'object') {
-    AWS.config.update(config);
+    configObj = Object.assign(config, { region: region })
+  } else {
+    // This will force using STS as fallback credentials provider
+    if (!configObj) configObj = new AWS.ECSCredentials();
+    if (!configObj) configObj = new AWS.SharedIniFileCredentials();
+    if (!configObj) configObj = new AWS.EnvironmentCredentials('AWS');
   }
 
-  const dynamoDB = new AWS.DynamoDB();
+  dynamoDB = new AWS.DynamoDB( configObj );
+
   if (!dynamoDB.config.credentials) {
     throw new Error('Can not load AWS credentials');
   }
@@ -32,11 +36,11 @@ module.exports = (region = 'eu-central-1', config) => {
 
     // Select Table and return method object for further queries
     select: TableName => new ConditionalQueryBuilder(TableName, {
-      docClient,
-      doc,
-      db,
-    }),
+    docClient,
+    doc,
+    db,
+  }),
 
     createSet: params => docClient.createSet(params),
-  };
+};
 };

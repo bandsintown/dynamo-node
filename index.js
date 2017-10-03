@@ -10,6 +10,10 @@ module.exports = (region = 'eu-central-1', config) => {
 
   var dynamoDB, credentialsObj, configObj;
   /*
+    This is for overwriting Global AWS.config and pass parameters directly trough the constructor
+    // http://docs.amazonaws.cn/en_us/AWSJavaScriptSDK/guide/node-configuring.html
+    // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html#constructor-property
+
     if (typeof config === 'string') {
       configObj = Object.assign(JSON.parse(require('fs').readFileSync(config, 'utf8')),
         { region: region, sessionToken: null });
@@ -33,14 +37,14 @@ module.exports = (region = 'eu-central-1', config) => {
         }
       })
     }
+    dynamoDB = new AWS.DynamoDB(configObj);
+    if (!dynamoDB.config.credentials) {
+      throw new Error('Can not load AWS credentials');
+    }
   */
   AWS.config.update({ region: region })
-  // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html#constructor-property
-  dynamoDB = new AWS.DynamoDB();
 
-  if (!dynamoDB.config.credentials) {
-    throw new Error('Can not load AWS credentials');
-  }
+  dynamoDB = new AWS.DynamoDB();
 
   const docClient = new AWS.DynamoDB.DocumentClient();
   const db = getPromise(dynamoDB);

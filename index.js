@@ -8,25 +8,35 @@ const getPromise = func => (method, params) => new Promise((resolve, reject) => 
 // Exports DynamoDB function that returns an object of methods
 module.exports = (region = 'eu-central-1', config) => {
 
-  var dynamoDB, configObj;
+  var dynamoDB, credentialsObj, configObj;
+  /*
+    if (typeof config === 'string') {
+      configObj = Object.assign(JSON.parse(require('fs').readFileSync(config, 'utf8')),
+        { region: region, sessionToken: null });
+    } else if (typeof config === 'object') {
+      configObj = Object.assign(config, { region: region })
+    } else {
+      let chain = new AWS.CredentialProviderChain()
 
-  if (typeof config === 'string') {
-    configObj = Object.assign(JSON.parse(require('fs').readFileSync(config, 'utf8')) );
-  } else if (typeof config === 'object') {
-    configObj = config
-  }
+      chain.defaultProviders = [
+        function () { return new AWS.EnvironmentCredentials('AWS') },
+        function () { return new AWS.SharedIniFileCredentials() },
+        // function () { return new AWS.SharedIniFileCredentials({profile: 'my_profile_name'}); },
+        function () { return new AWS.EC2MetadataCredentials() }
+      ]
 
-  // This will force using STS as fallback credentials provider
-  if (!Object.keys(configObj).length) configObj = new AWS.ECSCredentials();
-  // if (!Object.keys(configObj).length) configObj = new AWS.SharedIniFileCredentials();
-  // if (!Object.keys(configObj).length) configObj = new AWS.EnvironmentCredentials('AWS');
-
-  // Merge the region into config object
-  if (region) {
-    configObj = Object.assign(configObj, { region: region })
-  }
-
-  dynamoDB = new AWS.DynamoDB( configObj );
+      chain.resolve((err, cred) => {
+        // console.log('cred', cred, err)
+        if (!err) {
+          credentialsObj = cred
+          configObj = { accessKeyId: credentialsObj.accessKeyId, sessionToken: credentialsObj.sessionToken }
+        }
+      })
+    }
+  */
+  AWS.config.update({ region: region })
+  // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html#constructor-property
+  dynamoDB = new AWS.DynamoDB();
 
   if (!dynamoDB.config.credentials) {
     throw new Error('Can not load AWS credentials');
